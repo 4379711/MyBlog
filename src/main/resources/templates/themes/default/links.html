@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<div th:replace="themes/default/header::header(title='友情链接',keywords=null)"></div>
+<body>
+<article class="main-content post-page">
+    <div id="post-content" class="post-content">
+        <h3>友情链接</h3>
+        <ul class="flinks">
+            <th:block th:each="link : ${links}">
+                <li>🔒 <a th:href="${link.slug}" target="_blank" th:text="${link.name}"></a></li>
+            </th:block>
+        </ul>
+        <h3>想把你的网站放的我这?</h3>
+        <blockquote>
+            <ul>
+                <li><p>请确定你的网站能访问</p></li>
+                <li><p>请确定你的网站能有值得浪费时间的东西</p></li>
+                <li><p>请确定你的网站不是色情,暴力等会被关小黑屋的</p></li>
+            </ul>
+        </blockquote>
+        <h3>如果真的想放到这,那么联系我吧!</h3>
+       </div>
+</article>
+</body>
+<div th:replace="themes/default/footer::footer"></div>
+</html>

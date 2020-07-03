@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:with="title='页面找不到了',active='publish'">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <link th:href="@{/user/css/404error.css}" rel="stylesheet"/>
+    <title>哇,页面找不到了</title>
+</head>
+<body>
+<div class="error_404">
+    <div class="inner"
+         th:style="'background: url('+@{/user/img/404_bg.png}+') no-repeat center center;position:relative' ">
+
+        <a href="/">返回首页</a>
+    </div>
+</div>
+</body>
+</html>

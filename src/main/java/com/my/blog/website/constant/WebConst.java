@@ -12,15 +12,28 @@ import java.util.Set;
  */
 @Component
 public class WebConst {
+
     /**
-     * 存储安装信息的配置文件名称
+     * session cookie 过期时间 单位:秒
      */
-    public static final String INSTALL_FILE_CONF = "install.lock";
+//    public static final int SESSION_TIMEOUT = 60 * 60 * 10;
+//    public static final int COOKIE_TIMEOUT = 60 * 60 * 10;
+    public static final int SESSION_TIMEOUT = 60 ;
+    public static final int COOKIE_TIMEOUT = 60 ;
+
+    public static final int CSRF_TOKEN_TIMEOUT = 60 * 60 * 10;
+
+    /**
+     * 密码错误超过最大值等待时间
+     */
+    public static final int ERROR_PASSWORD_TIMEOUT = 60 * 30;
+    public static final int ERROR_PASSWORD_TIMES = 3;
+
 
     public static Map<String, String> initConfig = new HashMap<>();
 
 
-    public static String LOGIN_SESSION_KEY = "login_user";
+    public static final String LOGIN_SESSION_KEY = "login_user";
 
     public static final String USER_IN_COOKIE = "S_L_ID";
 
@@ -55,12 +68,7 @@ public class WebConst {
     public static final int HIT_EXCEED = 10;
 
     /**
-     * 上传文件最大1M
+     * 上传文件最大10M
      */
-    public static Integer MAX_FILE_SIZE = 1048576;
-
-    /**
-     * 要过滤的ip列表
-     */
-    public static final Set<String> BLOCK_IPS = new HashSet<>(16);
+    public static Integer MAX_FILE_SIZE = 10240000;
 }

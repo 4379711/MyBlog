@@ -3,6 +3,7 @@ package com.my.blog.website.utils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -36,7 +37,6 @@ public class ZipUtils {
         }
         in.close();
         zos.closeEntry();
-        //remember close it
         zos.close();
     }
 
@@ -60,8 +60,8 @@ public class ZipUtils {
     public static void addFolderToZip(String path, String srcFolder, ZipOutputStream zip) throws Exception {
         File folder = new File(srcFolder);
         if (null != path && folder.isDirectory()) {
-            for (String fileName : folder.list()) {
-                if (path.equals("")) {
+            for (String fileName : Objects.requireNonNull(folder.list())) {
+                if ("".equals(path)) {
                     addFileToZip(folder.getName(), srcFolder + "/" + fileName, zip);
                 } else {
                     addFileToZip(path + "/" + folder.getName(), srcFolder + "/" + fileName, zip);

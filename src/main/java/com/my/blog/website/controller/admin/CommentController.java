@@ -112,7 +112,7 @@ public class CommentController extends BaseController {
             return RestResponseBo.fail("不存在该评论");
         }
         UserVo users = this.user(request);
-        content = TaleUtils.cleanXSS(content);
+        content = TaleUtils.cleanXss(content);
         content = EmojiParser.parseToAliases(content);
 
         CommentVo comments = new CommentVo();

@@ -18,14 +18,19 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Map;
 
 /**
  * 用户后台登录/登出
+ *
  * @author liuyalong
  */
 @Controller
@@ -41,6 +46,7 @@ public class AuthController extends BaseController {
     @Resource
     private ILogService logService;
 
+
     @GetMapping(value = "/login")
     public String login() {
         return "admin/login";
@@ -51,26 +57,33 @@ public class AuthController extends BaseController {
      */
     @PostMapping(value = "login")
     @ResponseBody
-    public RestResponseBo doLogin(@RequestParam String username,
-                                  @RequestParam String password,
-                                  @RequestParam(required = false) String remeber_me,
+    public RestResponseBo doLogin(@RequestParam(value = "username") String username,
+                                  @RequestParam(value = "password") String password,
+                                  @RequestParam(value = "remember_me", required = false, defaultValue = "0") int rememberMe,
                                   HttpServletRequest request,
-                                  HttpServletResponse response){
+                                  HttpServletResponse response) {
 
-        Integer error_count = cache.get("login_error_count");
+        Integer errorCount = cache.get("login_error_count");
+
         try {
             UserVo user = usersService.login(username, password);
-            request.getSession().setAttribute(WebConst.LOGIN_SESSION_KEY, user);
-            if (StringUtils.isNotBlank(remeber_me)) {
+            HttpSession session = request.getSession();
+            // 设置session过期时间
+            session.setMaxInactiveInterval(WebConst.SESSION_TIMEOUT);
+            session.setAttribute(WebConst.LOGIN_SESSION_KEY, user);
+
+            // 记住登录状态勾选时,把用户id放到cookie
+            if (rememberMe == 1) {
                 TaleUtils.setCookie(response, user.getUid());
             }
+
             logService.insertLog(LogActions.LOGIN.getAction(), null, request.getRemoteAddr(), user.getUid());
         } catch (Exception e) {
-            error_count = null == error_count ? 1 : error_count + 1;
-            if (error_count > 3) {
-                return RestResponseBo.fail("您输入密码已经错误超过3次，请10分钟后尝试");
+            errorCount = null == errorCount ? 1 : errorCount + 1;
+            if (errorCount > WebConst.ERROR_PASSWORD_TIMES) {
+                return RestResponseBo.fail("您输入密码已经错误超过3次，请30分钟后尝试");
             }
-            cache.set("login_error_count", error_count, 10 * 60);
+            cache.set("login_error_count", errorCount, WebConst.ERROR_PASSWORD_TIMEOUT);
             String msg = "登录失败";
             if (e instanceof TipException) {
                 msg = e.getMessage();
@@ -79,12 +92,24 @@ public class AuthController extends BaseController {
             }
             return RestResponseBo.fail(msg);
         }
-        try {
-            response.sendRedirect("/admin");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return RestResponseBo.ok();
+
+
+
+        //todo 这里应该跳转回之前的页面,不应该直接去首页
+        //登录成功后跳转
+//        String referer = request.getHeader("Referer");
+        //默认跳转到首页
+//        if (StringUtils.isBlank(referer) || referer.endsWith("/admin/login")) {
+//            referer = "/";
+//        } else {
+//            String[] split = referer.split("/admin");
+//            int length = split.length - 1;
+//            referer = length == 0 ? "/" : split[length];
+//            if (!referer.startsWith("/")) {
+//                referer = "/" + referer;
+//            }
+//        }
+        return RestResponseBo.ok("登录成功");
     }
 
     /**
@@ -93,7 +118,7 @@ public class AuthController extends BaseController {
     @RequestMapping("/logout")
     public void logout(HttpSession session, HttpServletResponse response, HttpServletRequest request) {
         session.removeAttribute(WebConst.LOGIN_SESSION_KEY);
-        Cookie cookie = new Cookie(WebConst.USER_IN_COOKIE, "");
+        Cookie cookie = new Cookie(WebConst.USER_IN_COOKIE, null);
         cookie.setMaxAge(0);
         response.addCookie(cookie);
         try {

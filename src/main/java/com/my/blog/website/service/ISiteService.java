@@ -38,15 +38,6 @@ public interface ISiteService {
      */
     CommentVo getComment(Integer coid);
 
-    /**
-     * 系统备份
-     * @param bk_type
-     * @param bk_path
-     * @param fmt
-     * @return
-     */
-    BackResponseBo backup(String bk_type, String bk_path, String fmt) throws Exception;
-
 
     /**
      * 获取后台统计数据

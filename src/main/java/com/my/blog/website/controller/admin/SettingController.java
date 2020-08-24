@@ -38,9 +38,6 @@ public class SettingController extends BaseController {
     @Resource
     private ILogService logService;
 
-    @Resource
-    private ISiteService siteService;
-
     /**
      * 系统设置
      */
@@ -88,34 +85,6 @@ public class SettingController extends BaseController {
             return RestResponseBo.fail(msg);
         }
     }
-
-
-    /**
-     * 系统备份
-     */
-    @PostMapping(value = "backup")
-    @ResponseBody
-    @Transactional(rollbackFor = TipException.class)
-    public RestResponseBo backup(@RequestParam String bk_type, @RequestParam String bk_path,
-                                 HttpServletRequest request) {
-        if (StringUtils.isBlank(bk_type)) {
-            return RestResponseBo.fail("请确认信息输入完整");
-        }
-        try {
-            BackResponseBo backResponse = siteService.backup(bk_type, bk_path, "yyyyMMddHHmm");
-            logService.insertLog(LogActions.SYS_BACKUP.getAction(), null, request.getRemoteAddr(), this.getUid(request));
-            return RestResponseBo.ok(backResponse);
-        } catch (Exception e) {
-            String msg = "备份失败";
-            if (e instanceof TipException) {
-                msg = e.getMessage();
-            } else {
-                LOGGER.error(msg, e);
-            }
-            return RestResponseBo.fail(msg);
-        }
-    }
-
 
     /**
      * 数组转字符串

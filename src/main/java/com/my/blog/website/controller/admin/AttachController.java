@@ -31,6 +31,7 @@ import java.util.List;
 
 /**
  * 附件管理
+ *
  * @author liuyalong
  */
 @Controller
@@ -56,7 +57,7 @@ public class AttachController extends BaseController {
         PageInfo<AttachVo> attachPaginator = attachService.getAttachs(page, limit);
         request.setAttribute("attachs", attachPaginator);
         request.setAttribute(Types.ATTACH_URL.getType(), Commons.site_option(Types.ATTACH_URL.getType(), Commons.site_url()));
-        request.setAttribute("max_file_size", WebConst.MAX_FILE_SIZE / 1024);
+        request.setAttribute("max_file_size", WebConst.MAX_FILE_SIZE);
         return "admin/attach";
     }
 
@@ -66,31 +67,37 @@ public class AttachController extends BaseController {
     @PostMapping(value = "upload")
     @ResponseBody
     @Transactional(rollbackFor = TipException.class)
-    public RestResponseBo upload(HttpServletRequest request, @RequestParam("file") MultipartFile[] multipartFiles) throws IOException {
+    public RestResponseBo upload(HttpServletRequest request, @RequestParam("file") MultipartFile[] multipartFiles) {
         UserVo users = this.user(request);
         Integer uid = users.getUid();
-        List<String> errorFiles = new ArrayList<>();
-        try {
-            for (MultipartFile multipartFile : multipartFiles) {
-                String fname = multipartFile.getOriginalFilename();
-                if (multipartFile.getSize() <= WebConst.MAX_FILE_SIZE) {
-                    String fkey = TaleUtils.getFileKey(fname);
-                    String ftype = TaleUtils.isImage(multipartFile.getInputStream()) ? Types.IMAGE.getType() : Types.FILE.getType();
-                    File file = new File(CLASSPATH+fkey);
-                    try {
-                        FileCopyUtils.copy(multipartFile.getInputStream(),new FileOutputStream(file));
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    attachService.save(fname, fkey, ftype, uid);
-                } else {
-                    errorFiles.add(fname);
-                }
+
+        //先检查所有文件的大小和其他属性
+        for (MultipartFile multipartFile : multipartFiles) {
+            String fname = multipartFile.getOriginalFilename();
+            //先检查所有文件的大小和其他属性(暂未实现)
+            if (multipartFile.getSize() <= WebConst.MAX_FILE_SIZE) {
+                return RestResponseBo.fail(fname + "文件太大");
             }
-        } catch (Exception e) {
-            return RestResponseBo.fail();
         }
-        return RestResponseBo.ok(errorFiles);
+
+        // 开始写文件
+        for (MultipartFile multipartFile : multipartFiles) {
+            String fname = multipartFile.getOriginalFilename();
+            String fkey = TaleUtils.getFileKey(fname);
+            String ftype = null;
+            File file = new File(CLASSPATH + fkey);
+            try {
+                //区分图片文件和其他文件类似
+                ftype = TaleUtils.isImage(multipartFile.getInputStream()) ? Types.IMAGE.getType() : Types.FILE.getType();
+                FileCopyUtils.copy(multipartFile.getInputStream(), new FileOutputStream(file));
+                attachService.save(fname, fkey, ftype, uid);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return RestResponseBo.fail(fname + "上传失败");
+            }
+        }
+
+        return RestResponseBo.ok();
     }
 
     /**
@@ -100,16 +107,20 @@ public class AttachController extends BaseController {
     @ResponseBody
     @Transactional(rollbackFor = TipException.class)
     public RestResponseBo delete(@RequestParam Integer id, HttpServletRequest request) {
+        String msg = "附件删除失败";
         try {
             AttachVo attach = attachService.selectById(id);
             if (null == attach) {
                 return RestResponseBo.fail("不存在该附件");
             }
             attachService.deleteById(id);
-            new File(CLASSPATH + attach.getFkey()).delete();
+            boolean delete = new File(CLASSPATH + attach.getFkey()).delete();
+            if (!delete) {
+                return RestResponseBo.fail(msg);
+            }
             logService.insertLog(LogActions.DEL_ARTICLE.getAction(), attach.getFkey(), request.getRemoteAddr(), this.getUid(request));
         } catch (Exception e) {
-            String msg = "附件删除失败";
+
             if (e instanceof TipException) {
                 msg = e.getMessage();
             } else {

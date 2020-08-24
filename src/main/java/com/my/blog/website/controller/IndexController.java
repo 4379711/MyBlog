@@ -58,8 +58,9 @@ public class IndexController extends BaseController {
     /**
      * 首页
      */
-    @GetMapping(value = {"/", "index"})
+    @RequestMapping(value = {"/", "index"})
     public String index(HttpServletRequest request, @RequestParam(value = "limit", defaultValue = "12") int limit) {
+
         return this.index(request, 1, limit);
     }
 
@@ -196,8 +197,8 @@ public class IndexController extends BaseController {
             return RestResponseBo.fail("您发表评论太快了，请过会再试");
         }
 
-        author = TaleUtils.cleanXSS(author);
-        text = TaleUtils.cleanXSS(text);
+        author = TaleUtils.cleanXss(author);
+        text = TaleUtils.cleanXss(text);
 
         author = EmojiParser.parseToAliases(author);
         text = EmojiParser.parseToAliases(text);

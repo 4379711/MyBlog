@@ -4,17 +4,15 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.my.blog.website.exception.TipException;
 import com.my.blog.website.utils.DateKit;
-import com.my.blog.website.utils.TaleUtils;
+import com.my.blog.website.utils.PatternKit;
 import com.my.blog.website.dao.CommentVoMapper;
-import com.my.blog.website.modal.Bo.CommentBo;
-import com.my.blog.website.modal.Vo.CommentVo;
-import com.my.blog.website.modal.Vo.CommentVoExample;
-import com.my.blog.website.modal.Vo.ContentVo;
+import com.my.blog.website.model.Bo.CommentBo;
+import com.my.blog.website.model.Vo.CommentVo;
+import com.my.blog.website.model.Vo.CommentVoExample;
+import com.my.blog.website.model.Vo.ContentVo;
 import com.my.blog.website.service.ICommentService;
 import com.my.blog.website.service.IContentService;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -26,7 +24,6 @@ import java.util.List;
  */
 @Service
 public class CommentServiceImpl implements ICommentService {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CommentServiceImpl.class);
 
     @Resource
     private CommentVoMapper commentDao;
@@ -42,7 +39,7 @@ public class CommentServiceImpl implements ICommentService {
         if (StringUtils.isBlank(comments.getAuthor())) {
             comments.setAuthor("热心网友");
         }
-        if (StringUtils.isNotBlank(comments.getMail()) && !TaleUtils.isEmail(comments.getMail())) {
+        if (StringUtils.isNotBlank(comments.getMail()) && PatternKit.isEmail(comments.getMail())) {
             throw new TipException("请输入正确的邮箱格式");
         }
         if (StringUtils.isBlank(comments.getContent())) {

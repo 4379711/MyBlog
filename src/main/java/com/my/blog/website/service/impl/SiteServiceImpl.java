@@ -3,8 +3,8 @@ package com.my.blog.website.service.impl;
 import com.github.pagehelper.PageHelper;
 import com.my.blog.website.dao.AttachVoMapper;
 import com.my.blog.website.dto.MetaDto;
-import com.my.blog.website.modal.Bo.ArchiveBo;
-import com.my.blog.website.modal.Vo.*;
+import com.my.blog.website.model.Bo.ArchiveBo;
+import com.my.blog.website.model.Vo.*;
 import com.my.blog.website.service.ISiteService;
 import com.my.blog.website.utils.DateKit;
 import com.my.blog.website.constant.WebConst;
@@ -12,16 +12,11 @@ import com.my.blog.website.dao.CommentVoMapper;
 import com.my.blog.website.dao.ContentVoMapper;
 import com.my.blog.website.dao.MetaVoMapper;
 import com.my.blog.website.dto.Types;
-import com.my.blog.website.modal.Bo.StatisticsBo;
+import com.my.blog.website.model.Bo.StatisticsBo;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+
 import javax.annotation.Resource;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.*;
 
 /**
@@ -30,7 +25,6 @@ import java.util.*;
 @Service
 public class SiteServiceImpl implements ISiteService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SiteServiceImpl.class);
 
     @Resource
     private CommentVoMapper commentDao;
@@ -46,7 +40,6 @@ public class SiteServiceImpl implements ISiteService {
 
     @Override
     public List<CommentVo> recentComments(int limit) {
-        LOGGER.debug("Enter recentComments method:limit={}", limit);
         if (limit < 0 || limit > 10) {
             limit = 10;
         }
@@ -54,13 +47,11 @@ public class SiteServiceImpl implements ISiteService {
         example.setOrderByClause("created desc");
         PageHelper.startPage(1, limit);
         List<CommentVo> byPage = commentDao.selectByExampleWithBLOBs(example);
-        LOGGER.debug("Exit recentComments method");
         return byPage;
     }
 
     @Override
     public List<ContentVo> recentContents(int limit) {
-        LOGGER.debug("Enter recentContents method");
         if (limit < 0 || limit > 10) {
             limit = 10;
         }
@@ -69,7 +60,6 @@ public class SiteServiceImpl implements ISiteService {
         example.setOrderByClause("created desc");
         PageHelper.startPage(1, limit);
         List<ContentVo> list = contentDao.selectByExample(example);
-        LOGGER.debug("Exit recentContents method");
         return list;
     }
 
@@ -83,7 +73,6 @@ public class SiteServiceImpl implements ISiteService {
 
     @Override
     public StatisticsBo getStatistics() {
-        LOGGER.debug("Enter getStatistics method");
         StatisticsBo statistics = new StatisticsBo();
 
         ContentVoExample contentVoExample = new ContentVoExample();
@@ -102,13 +91,11 @@ public class SiteServiceImpl implements ISiteService {
         statistics.setComments(comments);
         statistics.setAttachs(attachs);
         statistics.setLinks(links);
-        LOGGER.debug("Exit getStatistics method");
         return statistics;
     }
 
     @Override
     public List<ArchiveBo> getArchives() {
-        LOGGER.debug("Enter getArchives method");
         List<ArchiveBo> archives = contentDao.findReturnArchiveBo();
         if (null != archives) {
             archives.forEach(archive -> {
@@ -125,13 +112,11 @@ public class SiteServiceImpl implements ISiteService {
                 archive.setArticles(contentss);
             });
         }
-        LOGGER.debug("Exit getArchives method");
         return archives;
     }
 
     @Override
     public List<MetaDto> metas(String type, String orderBy, int limit) {
-        LOGGER.debug("Enter metas method:type={},order={},limit={}", type, orderBy, limit);
         List<MetaDto> retList = null;
         if (StringUtils.isNotBlank(type)) {
             if (StringUtils.isBlank(orderBy)) {
@@ -147,28 +132,8 @@ public class SiteServiceImpl implements ISiteService {
 
             retList = metaDao.selectFromSql(paraMap);
         }
-        LOGGER.debug("Exit metas method");
         return retList;
     }
 
-
-    private void write(String data, File file, Charset charset) {
-        FileOutputStream os = null;
-        try {
-            os = new FileOutputStream(file);
-            os.write(data.getBytes(charset));
-        } catch (IOException var8) {
-            throw new IllegalStateException(var8);
-        } finally {
-            if (null != os) {
-                try {
-                    os.close();
-                } catch (IOException var2) {
-                    var2.printStackTrace();
-                }
-            }
-        }
-
-    }
 
 }

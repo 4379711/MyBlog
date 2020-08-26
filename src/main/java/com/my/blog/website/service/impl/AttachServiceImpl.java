@@ -4,11 +4,9 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.my.blog.website.dao.AttachVoMapper;
 import com.my.blog.website.utils.DateKit;
-import com.my.blog.website.modal.Vo.AttachVo;
-import com.my.blog.website.modal.Vo.AttachVoExample;
+import com.my.blog.website.model.Vo.AttachVo;
+import com.my.blog.website.model.Vo.AttachVoExample;
 import com.my.blog.website.service.IAttachService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -19,7 +17,6 @@ import java.util.List;
  */
 @Service
 public class AttachServiceImpl implements IAttachService {
-    private static final Logger LOGGER = LoggerFactory.getLogger(AttachServiceImpl.class);
 
     @Resource
     private AttachVoMapper attachDao;

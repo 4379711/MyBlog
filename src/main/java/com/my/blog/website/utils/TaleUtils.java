@@ -1,143 +1,41 @@
 package com.my.blog.website.utils;
 
-import com.my.blog.website.exception.TipException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.my.blog.website.constant.WebConst;
 import com.my.blog.website.controller.admin.AttachController;
-import com.my.blog.website.modal.Vo.UserVo;
+import com.my.blog.website.model.Vo.UserVo;
 import org.apache.commons.lang3.StringUtils;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import javax.imageio.ImageIO;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import javax.sql.DataSource;
 import java.awt.*;
 import java.io.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.text.Normalizer;
 import java.util.Date;
-import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * Tale工具类
+ *
+ * @author liuyalong
  */
 public class TaleUtils {
-    private static final Logger LOGGER = LoggerFactory.getLogger(TaleUtils.class);
 
-    private static DataSource newDataSource;
-    /**
-     * 一个月
-     */
-    private static final int one_month = 30 * 24 * 60 * 60;
-    /**
-     * 匹配邮箱正则
-     */
-    private static final Pattern VALID_EMAIL_ADDRESS_REGEX =
-            Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
     private static final Pattern SLUG_REGEX = Pattern.compile("^[A-Za-z0-9_-]{5,100}$", Pattern.CASE_INSENSITIVE);
     /**
      * markdown解析器
      */
-    private static Parser parser = Parser.builder().build();
-    /**
-     * 获取文件所在目录
-     */
-    private static String location = TaleUtils.class.getClassLoader().getResource("").getPath();
+    private static final Parser PARSER = Parser.builder().build();
 
-    /**
-     * 判断是否是邮箱
-     */
-    public static boolean isEmail(String emailStr) {
-        Matcher matcher = VALID_EMAIL_ADDRESS_REGEX.matcher(emailStr);
-        return matcher.find();
-    }
-
-    /**
-     * 获取当前时间
-     */
-    public static int getCurrentTime() {
-        return (int) (System.currentTimeMillis() / 1000);
-    }
-
-    /**
-     * @param url      数据库连接地址 127.0.0.1:3306
-     * @param dbName   数据库名称
-     * @param userName 用户
-     * @param password 密码
-     */
-    public static void updateJDBCFile(String url, String dbName, String userName, String password) {
-        LOGGER.info("Enter updateJDBCFile method");
-        Properties props = new Properties();
-        FileOutputStream fos = null;
-
-        try {
-            fos = new FileOutputStream("application-jdbc.properties");
-            props.setProperty("spring.datasource.url", url);
-            props.setProperty("spring.datasource.dbname", dbName);
-            props.setProperty("spring.datasource.username", userName);
-            props.setProperty("spring.datasource.password", password);
-            props.setProperty("spring.datasource.driver-class-name", "com.mysql.jdbc.Driver");
-            props.store(fos, "update jdbc info.");
-        } catch (IOException e) {
-            LOGGER.error("updateJDBCFile method fail:{}", e.getMessage());
-            e.printStackTrace();
-        } finally {
-            if (fos != null) {
-                try {
-                    fos.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        LOGGER.info("Exit updateJDBCFile method");
-    }
-
-    /**
-     * 获取properties配置数据,
-     *
-     * @param fileName 文件名 如 application-jdbc.properties来自jar中
-     */
-    public static Properties getPropFromJar(String fileName) {
-        Properties properties = new Properties();
-        try {
-//            默认是classPath路径
-            InputStream resourceAsStream = TaleUtils.class.getClassLoader().getResourceAsStream(fileName);
-            if (resourceAsStream == null) {
-                throw new TipException("get resource from path fail");
-            }
-            properties.load(resourceAsStream);
-        } catch (TipException | IOException e) {
-            LOGGER.error("get properties file fail={}", e.getMessage());
-        }
-        return properties;
-    }
-
-    /**
-     * @param fileName 获取jar外部的文件
-     * @return 返回属性
-     */
-    private static Properties getPropFromFile(String fileName) {
-        Properties properties = new Properties();
-        try {
-//            默认是classPath路径
-            InputStream resourceAsStream = new FileInputStream(fileName);
-            properties.load(resourceAsStream);
-        } catch (TipException | IOException e) {
-            LOGGER.error("get properties file fail={}", e.getMessage());
-        }
-        return properties;
-    }
 
     /**
      * md5加密
@@ -145,7 +43,7 @@ public class TaleUtils {
      * @param source 数据源
      * @return 加密字符串
      */
-    public static String MD5encode(String source) {
+    public static String mD5encode(String source) {
         if (StringUtils.isBlank(source)) {
             return null;
         }
@@ -154,6 +52,7 @@ public class TaleUtils {
             messageDigest = MessageDigest.getInstance("MD5");
         } catch (NoSuchAlgorithmException ignored) {
         }
+        assert messageDigest != null;
         byte[] encode = messageDigest.digest(source.getBytes());
         StringBuilder hexString = new StringBuilder();
         for (byte anEncode : encode) {
@@ -167,39 +66,22 @@ public class TaleUtils {
     }
 
     /**
-     * 获取新的数据源
-     *
-     * @return
-     */
-    public static DataSource getNewDataSource() {
-        if (newDataSource == null) {
-            synchronized (TaleUtils.class) {
-                if (newDataSource == null) {
-                    Properties properties = TaleUtils.getPropFromFile("application-jdbc.properties");
-                    if (properties.size() == 0) {
-                        return newDataSource;
-                    }
-                    DriverManagerDataSource managerDataSource = new DriverManagerDataSource();
-                    //        TODO 对不同数据库支持
-                    managerDataSource.setDriverClassName("com.mysql.jdbc.Driver");
-                    managerDataSource.setPassword(properties.getProperty("spring.datasource.password"));
-                    String str = "jdbc:mysql://" + properties.getProperty("spring.datasource.url") + "/" + properties.getProperty("spring.datasource.dbname") + "?useUnicode=true&characterEncoding=utf-8&useSSL=false";
-                    managerDataSource.setUrl(str);
-                    managerDataSource.setUsername(properties.getProperty("spring.datasource.username"));
-                    newDataSource = managerDataSource;
-                }
-            }
-        }
-        return newDataSource;
-    }
-
-    /**
      * 返回当前登录用户
-     *
      */
     public static UserVo getLoginUser(HttpServletRequest request) {
-        HttpSession session = request.getSession();
+        HttpSession session = request.getSession(false);
         if (null == session) {
+            // 尝试从cookies中获取用户信息
+            String cookieUser = getCookieUid(request);
+
+            if (null != cookieUser) {
+
+                ObjectMapper objectMapper = new ObjectMapper();
+                try {
+                    return objectMapper.readValue(cookieUser, UserVo.class);
+                } catch (JsonProcessingException ignore) {
+                }
+            }
             return null;
         }
         return (UserVo) session.getAttribute(WebConst.LOGIN_SESSION_KEY);
@@ -209,13 +91,12 @@ public class TaleUtils {
     /**
      * 获取cookie中的用户id
      */
-    public static Integer getCookieUid(HttpServletRequest request) {
+    public static String getCookieUid(HttpServletRequest request) {
         if (null != request) {
             Cookie cookie = cookieRaw(request);
             if (cookie != null && cookie.getValue() != null) {
                 try {
-                    String uid = Tools.deAes(cookie.getValue(), WebConst.AES_SALT);
-                    return StringUtils.isNotBlank(uid) && Tools.isNumber(uid) ? Integer.valueOf(uid) : null;
+                    return Tools.deAes(cookie.getValue(), WebConst.AES_SALT);
                 } catch (Exception ignored) {
                 }
             }
@@ -245,9 +126,10 @@ public class TaleUtils {
     /**
      * 设置记住密码cookie
      */
-    public static void setCookie(HttpServletResponse response, Integer uid) {
+    public static void setCookie(HttpServletResponse response, String user) {
         try {
-            String val = Tools.enAes(uid.toString(), WebConst.AES_SALT);
+            String val = Tools.enAes(user, WebConst.AES_SALT);
+
             Cookie cookie = new Cookie(WebConst.USER_IN_COOKIE, val);
             cookie.setPath("/");
             cookie.setMaxAge(WebConst.COOKIE_TIMEOUT);
@@ -275,27 +157,12 @@ public class TaleUtils {
         if (StringUtils.isBlank(markdown)) {
             return "";
         }
-        Node document = parser.parse(markdown);
+        Node document = PARSER.parse(markdown);
         HtmlRenderer renderer = HtmlRenderer.builder().build();
         String content = renderer.render(document);
         content = Commons.emoji(content);
 
         return content;
-    }
-
-    /**
-     * 退出登录状态
-     */
-    public static void logout(HttpSession session, HttpServletResponse response) {
-        session.removeAttribute(WebConst.LOGIN_SESSION_KEY);
-        Cookie cookie = new Cookie(WebConst.USER_IN_COOKIE, null);
-        cookie.setMaxAge(0);
-        response.addCookie(cookie);
-        try {
-            response.sendRedirect(Commons.site_url());
-        } catch (IOException e) {
-            LOGGER.error(e.getMessage(), e);
-        }
     }
 
     /**
@@ -357,21 +224,6 @@ public class TaleUtils {
         } catch (Exception e) {
             return false;
         }
-    }
-
-    /**
-     * 随机数
-     */
-    public static String getRandomNumber(int size) {
-        StringBuilder num = new StringBuilder();
-
-        for (int i = 0; i < size; ++i) {
-            double a = Math.random() * 9.0D;
-            a = Math.ceil(a);
-            int randomNum = (int) a;
-            num.append(randomNum);
-        }
-        return num.toString();
     }
 
     /**

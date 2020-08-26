@@ -4,15 +4,13 @@ import com.github.pagehelper.PageInfo;
 import com.vdurmont.emoji.EmojiParser;
 import com.my.blog.website.controller.BaseController;
 import com.my.blog.website.exception.TipException;
-import com.my.blog.website.modal.Bo.RestResponseBo;
-import com.my.blog.website.modal.Vo.CommentVo;
-import com.my.blog.website.modal.Vo.CommentVoExample;
-import com.my.blog.website.modal.Vo.UserVo;
+import com.my.blog.website.model.Bo.RestResponseBo;
+import com.my.blog.website.model.Vo.CommentVo;
+import com.my.blog.website.model.Vo.CommentVoExample;
+import com.my.blog.website.model.Vo.UserVo;
 import com.my.blog.website.service.ICommentService;
 import com.my.blog.website.utils.TaleUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -27,7 +25,6 @@ import javax.servlet.http.HttpServletRequest;
 @RequestMapping("admin/comments")
 public class CommentController extends BaseController {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(CommentController.class);
 
     @Resource
     private ICommentService commentsService;
@@ -62,11 +59,6 @@ public class CommentController extends BaseController {
             commentsService.delete(coid, comments.getCid());
         } catch (Exception e) {
             String msg = "评论删除失败";
-            if (e instanceof TipException) {
-                msg = e.getMessage();
-            } else {
-                LOGGER.error(msg, e);
-            }
             return RestResponseBo.fail(msg);
         }
         return RestResponseBo.ok();
@@ -83,11 +75,6 @@ public class CommentController extends BaseController {
             commentsService.update(comments);
         } catch (Exception e) {
             String msg = "操作失败";
-            if (e instanceof TipException) {
-                msg = e.getMessage();
-            } else {
-                LOGGER.error(msg, e);
-            }
             return RestResponseBo.fail(msg);
         }
         return RestResponseBo.ok();
@@ -129,11 +116,6 @@ public class CommentController extends BaseController {
             return RestResponseBo.ok();
         } catch (Exception e) {
             String msg = "回复失败";
-            if (e instanceof TipException) {
-                msg = e.getMessage();
-            } else {
-                LOGGER.error(msg, e);
-            }
             return RestResponseBo.fail(msg);
         }
     }

@@ -5,20 +5,19 @@ import com.my.blog.website.controller.BaseController;
 import com.my.blog.website.dto.LogActions;
 import com.my.blog.website.dto.Types;
 import com.my.blog.website.exception.TipException;
-import com.my.blog.website.modal.Bo.RestResponseBo;
-import com.my.blog.website.modal.Vo.ContentVo;
-import com.my.blog.website.modal.Vo.ContentVoExample;
-import com.my.blog.website.modal.Vo.MetaVo;
-import com.my.blog.website.modal.Vo.UserVo;
+import com.my.blog.website.model.Bo.RestResponseBo;
+import com.my.blog.website.model.Vo.ContentVo;
+import com.my.blog.website.model.Vo.ContentVoExample;
+import com.my.blog.website.model.Vo.MetaVo;
+import com.my.blog.website.model.Vo.UserVo;
 import com.my.blog.website.service.IContentService;
 import com.my.blog.website.service.ILogService;
 import com.my.blog.website.service.IMetaService;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -30,8 +29,6 @@ import java.util.List;
 @RequestMapping("/admin/article")
 @Transactional(rollbackFor = TipException.class)
 public class ArticleController extends BaseController {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(ArticleController.class);
 
     @Resource
     private IContentService contentsService;
@@ -97,11 +94,6 @@ public class ArticleController extends BaseController {
             contentsService.publish(contents);
         } catch (Exception e) {
             String msg = "文章发布失败";
-            if (e instanceof TipException) {
-                msg = e.getMessage();
-            } else {
-                LOGGER.error(msg, e);
-            }
             return RestResponseBo.fail(msg);
         }
         return RestResponseBo.ok();
@@ -121,11 +113,6 @@ public class ArticleController extends BaseController {
             contentsService.updateArticle(contents);
         } catch (Exception e) {
             String msg = "文章编辑失败";
-            if (e instanceof TipException) {
-                msg = e.getMessage();
-            } else {
-                LOGGER.error(msg, e);
-            }
             return RestResponseBo.fail(msg);
         }
         return RestResponseBo.ok();
@@ -143,11 +130,6 @@ public class ArticleController extends BaseController {
             logService.insertLog(LogActions.DEL_ARTICLE.getAction(), cid + "", request.getRemoteAddr(), this.getUid(request));
         } catch (Exception e) {
             String msg = "文章删除失败";
-            if (e instanceof TipException) {
-                msg = e.getMessage();
-            } else {
-                LOGGER.error(msg, e);
-            }
             return RestResponseBo.fail(msg);
         }
         return RestResponseBo.ok();

@@ -1,4 +1,4 @@
-package com.my.blog.website.utils;
+package com.my.blog.website.aspect;
 
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
@@ -19,8 +19,8 @@ import java.util.Arrays;
  * @author liuyalong
  * 来访记录
  */
-@Aspect
-@Component
+//@Aspect
+//@Component
 public class LogAspect {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSource.class);
 

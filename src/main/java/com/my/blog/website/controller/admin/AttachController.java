@@ -6,15 +6,13 @@ import com.my.blog.website.controller.BaseController;
 import com.my.blog.website.dto.LogActions;
 import com.my.blog.website.dto.Types;
 import com.my.blog.website.exception.TipException;
-import com.my.blog.website.modal.Bo.RestResponseBo;
-import com.my.blog.website.modal.Vo.AttachVo;
-import com.my.blog.website.modal.Vo.UserVo;
+import com.my.blog.website.model.Bo.RestResponseBo;
+import com.my.blog.website.model.Vo.AttachVo;
+import com.my.blog.website.model.Vo.UserVo;
 import com.my.blog.website.service.IAttachService;
 import com.my.blog.website.service.ILogService;
 import com.my.blog.website.utils.Commons;
 import com.my.blog.website.utils.TaleUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.FileCopyUtils;
@@ -26,8 +24,6 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * 附件管理
@@ -37,8 +33,6 @@ import java.util.List;
 @Controller
 @RequestMapping("admin/attach")
 public class AttachController extends BaseController {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(AttachController.class);
 
     public static final String CLASSPATH = TaleUtils.getUplodFilePath();
 
@@ -73,9 +67,14 @@ public class AttachController extends BaseController {
 
         //先检查所有文件的大小和其他属性
         for (MultipartFile multipartFile : multipartFiles) {
+            //这里还需要再次判断是否有文件
+            if (multipartFile.isEmpty()) {
+                return RestResponseBo.fail("未找到文件!");
+            }
+
             String fname = multipartFile.getOriginalFilename();
-            //先检查所有文件的大小和其他属性(暂未实现)
-            if (multipartFile.getSize() <= WebConst.MAX_FILE_SIZE) {
+            //先检查所有文件的大小
+            if (multipartFile.getSize() > WebConst.MAX_FILE_SIZE) {
                 return RestResponseBo.fail(fname + "文件太大");
             }
         }
@@ -84,11 +83,11 @@ public class AttachController extends BaseController {
         for (MultipartFile multipartFile : multipartFiles) {
             String fname = multipartFile.getOriginalFilename();
             String fkey = TaleUtils.getFileKey(fname);
-            String ftype = null;
             File file = new File(CLASSPATH + fkey);
+
             try {
                 //区分图片文件和其他文件类似
-                ftype = TaleUtils.isImage(multipartFile.getInputStream()) ? Types.IMAGE.getType() : Types.FILE.getType();
+                String ftype = TaleUtils.isImage(multipartFile.getInputStream()) ? Types.IMAGE.getType() : Types.FILE.getType();
                 FileCopyUtils.copy(multipartFile.getInputStream(), new FileOutputStream(file));
                 attachService.save(fname, fkey, ftype, uid);
             } catch (IOException e) {
@@ -120,12 +119,6 @@ public class AttachController extends BaseController {
             }
             logService.insertLog(LogActions.DEL_ARTICLE.getAction(), attach.getFkey(), request.getRemoteAddr(), this.getUid(request));
         } catch (Exception e) {
-
-            if (e instanceof TipException) {
-                msg = e.getMessage();
-            } else {
-                LOGGER.error(msg, e);
-            }
             return RestResponseBo.fail(msg);
         }
         return RestResponseBo.ok();

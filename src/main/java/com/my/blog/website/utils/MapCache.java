@@ -5,6 +5,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * map缓存实现
+ * @author liuyalong
  */
 public class MapCache {
 
@@ -22,7 +23,7 @@ public class MapCache {
     /**
      * 缓存容器
      */
-    private Map<String, CacheObject> cachePool;
+    private final Map<String, CacheObject> cachePool;
 
     public MapCache() {
         this(DEFAULT_CACHES);

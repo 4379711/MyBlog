@@ -2,13 +2,11 @@ package com.my.blog.website.service.impl;
 
 import com.my.blog.website.dao.UserVoMapper;
 import com.my.blog.website.exception.TipException;
-import com.my.blog.website.modal.Vo.UserVo;
+import com.my.blog.website.model.Vo.UserVo;
 import com.my.blog.website.service.IUserService;
 import com.my.blog.website.utils.TaleUtils;
-import com.my.blog.website.modal.Vo.UserVoExample;
+import com.my.blog.website.model.Vo.UserVoExample;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -19,7 +17,6 @@ import java.util.List;
  */
 @Service
 public class UserServiceImpl implements IUserService {
-    private static final Logger LOGGER = LoggerFactory.getLogger(UserServiceImpl.class);
 
     @Resource
     private UserVoMapper userDao;
@@ -29,9 +26,9 @@ public class UserServiceImpl implements IUserService {
         Integer uid = null;
         if (StringUtils.isNotBlank(userVo.getUsername()) && StringUtils.isNotBlank(userVo.getEmail())) {
 //            用户密码加密
-            String encodePwd = TaleUtils.MD5encode(userVo.getUsername() + userVo.getPassword());
+            String encodePwd = TaleUtils.mD5encode(userVo.getUsername() + userVo.getPassword());
             userVo.setPassword(encodePwd);
-             userDao.insertSelective(userVo);
+            userDao.insertSelective(userVo);
         }
         return userVo.getUid();
     }
@@ -57,10 +54,10 @@ public class UserServiceImpl implements IUserService {
         if (count < 1) {
             throw new TipException("不存在该用户");
         }
-        String pwd = TaleUtils.MD5encode(username+password);
+        String pwd = TaleUtils.mD5encode(username + password);
         criteria.andPasswordEqualTo(pwd);
         List<UserVo> userVos = userDao.selectByExample(example);
-        if (userVos.size()!=1) {
+        if (userVos.size() != 1) {
             throw new TipException("用户名或密码错误");
         }
         return userVos.get(0);
@@ -72,7 +69,7 @@ public class UserServiceImpl implements IUserService {
             throw new TipException("userVo is null");
         }
         int i = userDao.updateByPrimaryKeySelective(userVo);
-        if(i!=1){
+        if (i != 1) {
             throw new TipException("update user by uid and retrun is not one");
         }
     }

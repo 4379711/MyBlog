@@ -1,19 +1,15 @@
 package com.my.blog.website.controller.admin;
 
 import com.my.blog.website.service.ILogService;
-import com.my.blog.website.service.ISiteService;
 import com.my.blog.website.constant.WebConst;
 import com.my.blog.website.controller.BaseController;
 import com.my.blog.website.dto.LogActions;
 import com.my.blog.website.exception.TipException;
-import com.my.blog.website.modal.Bo.BackResponseBo;
-import com.my.blog.website.modal.Bo.RestResponseBo;
-import com.my.blog.website.modal.Vo.OptionVo;
+import com.my.blog.website.model.Bo.RestResponseBo;
+import com.my.blog.website.model.Vo.OptionVo;
 import com.my.blog.website.service.IOptionService;
 import com.my.blog.website.utils.GsonUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -30,7 +26,6 @@ import java.util.Map;
 @Controller
 @RequestMapping("/admin/setting")
 public class SettingController extends BaseController {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SettingController.class);
 
     @Resource
     private IOptionService optionService;
@@ -77,20 +72,12 @@ public class SettingController extends BaseController {
             return RestResponseBo.ok();
         } catch (Exception e) {
             String msg = "保存设置失败";
-            if (e instanceof TipException) {
-                msg = e.getMessage();
-            } else {
-                LOGGER.error(msg, e);
-            }
             return RestResponseBo.fail(msg);
         }
     }
 
     /**
      * 数组转字符串
-     *
-     * @param arr
-     * @return
      */
     private String join(String[] arr) {
         StringBuilder ret = new StringBuilder();

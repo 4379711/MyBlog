@@ -1,15 +1,17 @@
 package com.my.blog.website.service;
 
-import com.my.blog.website.modal.Vo.LogVo;
+import com.my.blog.website.model.Vo.LogVo;
 
 import java.util.List;
 
+/**
+ * @author liuyalong
+ */
 public interface ILogService {
 
     /**
      * 保存操作日志
      *
-     * @param logVo
      */
     void insertLog(LogVo logVo);
 

@@ -1,11 +1,9 @@
 package com.my.blog.website.interceptor;
 
-import com.my.blog.website.modal.Vo.UserVo;
-import com.my.blog.website.service.IUserService;
+import com.my.blog.website.model.Vo.UserVo;
 import com.my.blog.website.utils.*;
 import com.my.blog.website.constant.WebConst;
 import com.my.blog.website.dto.Types;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -25,8 +23,6 @@ import javax.servlet.http.HttpSession;
 @Component
 public class BaseInterceptor implements HandlerInterceptor {
     private static final Logger logger = LoggerFactory.getLogger(BaseInterceptor.class);
-    @Resource
-    private IUserService userService;
 
     private MapCache cache = MapCache.single();
 
@@ -48,55 +44,48 @@ public class BaseInterceptor implements HandlerInterceptor {
         if (uri.endsWith(".css") || uri.endsWith(".js") || uri.endsWith(".png") || uri.endsWith(".jpg")) {
             return true;
         }
-
-        HttpSession session = request.getSession();
-        //从session 中获取登录的用户
+        //获取登录的用户
         UserVo user = TaleUtils.getLoginUser(request);
 
-        //从cookie中获取用户ID
-        Integer uid = TaleUtils.getCookieUid(request);
-
-        //未登录后台,并且不是在登录页面
+        //后台管理页面需要拦截
         boolean isLoginAdminAction = uri.startsWith("/admin") && !uri.startsWith("/admin/login");
-        if (isLoginAdminAction) {
 
-            //cookie  session里没有用户信息,必须去登录
-            if (uid == null && user == null) {
+        if (isLoginAdminAction) {
+            //cookie 里没有用户信息,必须去登录
+            if (user == null) {
+                // 这里实际上有问题,如果是ajax请求是无法重定向的,所以还需要特殊处理,暂时懒得做
                 response.sendRedirect("/admin/login");
                 return false;
+            } else {
+                // 退出浏览器会新生成session,此时把cookies里的用户信息给新的session
+                HttpSession session = request.getSession(false);
+                if (null == session) {
+                    HttpSession newSession = request.getSession();
+                    newSession.setAttribute(WebConst.LOGIN_SESSION_KEY, user);
+                    newSession.setMaxInactiveInterval(WebConst.SESSION_TIMEOUT);
+                }
             }
-            // session过期,重新登录,并返回之前的页面
-            //todo 这里应该使用转发,不应使用重定向
-//            if (user == null) {
-//                String referer = request.getHeader("Referer");
-//                if (StringUtils.isNotBlank(referer) && !"/admin/login".equals(referer)) {
-//                    request.getRequestDispatcher(referer).forward(request, response);
-//                } else {
-//                    response.sendRedirect("/admin/login");
-//                }
-//
-//                return false;
-//            }
         }
 
         //设置get请求的token
         if ("GET".equals(request.getMethod())) {
-            String csrfToken = UUID.UU64();
+            String csrfToken = UUID.uU64();
             cache.hset(Types.CSRF_TOKEN.getType(), csrfToken, uri, WebConst.CSRF_TOKEN_TIMEOUT);
             request.setAttribute("_csrf_token", csrfToken);
         }
         return true;
+
     }
 
     @Override
-    public void postHandle(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Object o, ModelAndView modelAndView) throws Exception {
+    public void postHandle(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Object o, ModelAndView modelAndView) {
         //一些工具类和公共方法
         httpServletRequest.setAttribute("commons", commons);
         httpServletRequest.setAttribute("adminCommons", adminCommons);
     }
 
     @Override
-    public void afterCompletion(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Object o, Exception e) throws Exception {
+    public void afterCompletion(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Object o, Exception e) {
 
     }
 }

@@ -3,9 +3,7 @@ package com.my.blog.website.constant;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * @author liuyalong
@@ -16,11 +14,8 @@ public class WebConst {
     /**
      * session cookie 过期时间 单位:秒
      */
-//    public static final int SESSION_TIMEOUT = 60 * 60 * 10;
-//    public static final int COOKIE_TIMEOUT = 60 * 60 * 10;
-    public static final int SESSION_TIMEOUT = 60 ;
-    public static final int COOKIE_TIMEOUT = 60 ;
-
+    public static final int SESSION_TIMEOUT = 60 * 60 * 10;
+    public static final int COOKIE_TIMEOUT = 60 * 60 * 10;
     public static final int CSRF_TOKEN_TIMEOUT = 60 * 60 * 10;
 
     /**
@@ -69,6 +64,7 @@ public class WebConst {
 
     /**
      * 上传文件最大10M
+     * 注意不能比配置文件里的spring.servlet.multipart.max-file-size值大
      */
-    public static Integer MAX_FILE_SIZE = 10240000;
+    public static Integer MAX_FILE_SIZE = 1024 * 1024 * 10;
 }

@@ -2,12 +2,10 @@ package com.my.blog.website.controller.admin;
 
 import com.my.blog.website.controller.BaseController;
 import com.my.blog.website.exception.TipException;
-import com.my.blog.website.modal.Bo.RestResponseBo;
+import com.my.blog.website.model.Bo.RestResponseBo;
 import com.my.blog.website.service.IMetaService;
 import com.my.blog.website.dto.Types;
-import com.my.blog.website.modal.Vo.MetaVo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.my.blog.website.model.Vo.MetaVo;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -23,7 +21,6 @@ import java.util.List;
 @RequestMapping("admin/links")
 public class LinksController extends BaseController {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(LinksController.class);
 
     @Resource
     private IMetaService metasService;
@@ -59,11 +56,6 @@ public class LinksController extends BaseController {
             }
         } catch (Exception e) {
             String msg = "友链保存失败";
-            if (e instanceof TipException) {
-                msg = e.getMessage();
-            } else {
-                LOGGER.error(msg, e);
-            }
             return RestResponseBo.fail(msg);
         }
         return RestResponseBo.ok();
@@ -77,11 +69,6 @@ public class LinksController extends BaseController {
             metasService.delete(mid);
         } catch (Exception e) {
             String msg = "友链删除失败";
-            if (e instanceof TipException) {
-                msg = e.getMessage();
-            } else {
-                LOGGER.error(msg, e);
-            }
             return RestResponseBo.fail(msg);
         }
         return RestResponseBo.ok();

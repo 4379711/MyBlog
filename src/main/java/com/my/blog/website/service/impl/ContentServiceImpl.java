@@ -6,8 +6,8 @@ import com.my.blog.website.constant.WebConst;
 import com.my.blog.website.dao.MetaVoMapper;
 import com.my.blog.website.dto.Types;
 import com.my.blog.website.exception.TipException;
-import com.my.blog.website.modal.Vo.ContentVo;
-import com.my.blog.website.modal.Vo.ContentVoExample;
+import com.my.blog.website.model.Vo.ContentVo;
+import com.my.blog.website.model.Vo.ContentVoExample;
 import com.my.blog.website.service.IContentService;
 import com.my.blog.website.service.IMetaService;
 import com.my.blog.website.service.IRelationshipService;
@@ -17,8 +17,6 @@ import com.my.blog.website.utils.Tools;
 import com.vdurmont.emoji.EmojiParser;
 import com.my.blog.website.dao.ContentVoMapper;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -29,7 +27,6 @@ import java.util.List;
  */
 @Service
 public class ContentServiceImpl implements IContentService {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ContentServiceImpl.class);
 
     @Resource
     private ContentVoMapper contentDao;

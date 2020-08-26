@@ -1,35 +1,30 @@
 package com.my.blog.website.controller.admin;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.my.blog.website.constant.WebConst;
 import com.my.blog.website.controller.BaseController;
 import com.my.blog.website.dto.LogActions;
 import com.my.blog.website.exception.TipException;
-import com.my.blog.website.modal.Bo.RestResponseBo;
-import com.my.blog.website.modal.Vo.UserVo;
+import com.my.blog.website.model.Bo.RestResponseBo;
+import com.my.blog.website.model.Vo.UserVo;
 import com.my.blog.website.service.ILogService;
 import com.my.blog.website.service.IUserService;
 import com.my.blog.website.utils.Commons;
 import com.my.blog.website.utils.TaleUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Map;
 
 /**
- * 用户后台登录/登出
+ * 用户后台登录/登出,修改密码
  *
  * @author liuyalong
  */
@@ -38,10 +33,9 @@ import java.util.Map;
 @Transactional(rollbackFor = TipException.class)
 public class AuthController extends BaseController {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AuthController.class);
 
     @Resource
-    private IUserService usersService;
+    private IUserService userService;
 
     @Resource
     private ILogService logService;
@@ -66,7 +60,7 @@ public class AuthController extends BaseController {
         Integer errorCount = cache.get("login_error_count");
 
         try {
-            UserVo user = usersService.login(username, password);
+            UserVo user = userService.login(username, password);
             HttpSession session = request.getSession();
             // 设置session过期时间
             session.setMaxInactiveInterval(WebConst.SESSION_TIMEOUT);
@@ -74,7 +68,9 @@ public class AuthController extends BaseController {
 
             // 记住登录状态勾选时,把用户id放到cookie
             if (rememberMe == 1) {
-                TaleUtils.setCookie(response, user.getUid());
+                ObjectMapper objectMapper = new ObjectMapper();
+                String userString = objectMapper.writeValueAsString(user);
+                TaleUtils.setCookie(response, userString);
             }
 
             logService.insertLog(LogActions.LOGIN.getAction(), null, request.getRemoteAddr(), user.getUid());
@@ -85,30 +81,9 @@ public class AuthController extends BaseController {
             }
             cache.set("login_error_count", errorCount, WebConst.ERROR_PASSWORD_TIMEOUT);
             String msg = "登录失败";
-            if (e instanceof TipException) {
-                msg = e.getMessage();
-            } else {
-                LOGGER.error(msg, e);
-            }
             return RestResponseBo.fail(msg);
         }
 
-
-
-        //todo 这里应该跳转回之前的页面,不应该直接去首页
-        //登录成功后跳转
-//        String referer = request.getHeader("Referer");
-        //默认跳转到首页
-//        if (StringUtils.isBlank(referer) || referer.endsWith("/admin/login")) {
-//            referer = "/";
-//        } else {
-//            String[] split = referer.split("/admin");
-//            int length = split.length - 1;
-//            referer = length == 0 ? "/" : split[length];
-//            if (!referer.startsWith("/")) {
-//                referer = "/" + referer;
-//            }
-//        }
         return RestResponseBo.ok("登录成功");
     }
 
@@ -116,16 +91,58 @@ public class AuthController extends BaseController {
      * 注销
      */
     @RequestMapping("/logout")
-    public void logout(HttpSession session, HttpServletResponse response, HttpServletRequest request) {
-        session.removeAttribute(WebConst.LOGIN_SESSION_KEY);
+    public void logout(HttpServletResponse response, HttpServletRequest request) {
+        //销毁session：
+        request.getSession(false).invalidate();
+
+        //清除cookie：
         Cookie cookie = new Cookie(WebConst.USER_IN_COOKIE, null);
         cookie.setMaxAge(0);
         response.addCookie(cookie);
+
         try {
             response.sendRedirect(Commons.site_login());
         } catch (IOException e) {
             e.printStackTrace();
-            LOGGER.error("注销失败", e);
+        }
+    }
+
+
+    /**
+     * 修改密码
+     */
+    @PostMapping(value = "/password")
+    @ResponseBody
+    @Transactional(rollbackFor = TipException.class)
+    public RestResponseBo upPwd(@RequestParam String oldPassword, @RequestParam String password, HttpServletRequest request, HttpSession session) {
+        UserVo users = this.user(request);
+        if (StringUtils.isBlank(oldPassword) || StringUtils.isBlank(password)) {
+            return RestResponseBo.fail("请确认信息输入完整");
+        }
+
+        if (!users.getPassword().equals(TaleUtils.mD5encode(users.getUsername() + oldPassword))) {
+            return RestResponseBo.fail("旧密码错误");
+        }
+        if (password.length() < 6 || password.length() > 14) {
+            return RestResponseBo.fail("请输入6-14位密码");
+        }
+
+        try {
+            UserVo temp = new UserVo();
+            temp.setUid(users.getUid());
+            String pwd = TaleUtils.mD5encode(users.getUsername() + password);
+            temp.setPassword(pwd);
+            userService.updateByUid(temp);
+            logService.insertLog(LogActions.UP_PWD.getAction(), null, request.getRemoteAddr(), this.getUid(request));
+
+            //更新session中的数据
+            UserVo original = (UserVo) session.getAttribute(WebConst.LOGIN_SESSION_KEY);
+            original.setPassword(pwd);
+            session.setAttribute(WebConst.LOGIN_SESSION_KEY, original);
+            return RestResponseBo.ok();
+        } catch (Exception e) {
+            String msg = "密码修改失败";
+            return RestResponseBo.fail(msg);
         }
     }
 }

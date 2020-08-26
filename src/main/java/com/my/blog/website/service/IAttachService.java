@@ -1,7 +1,7 @@
 package com.my.blog.website.service;
 
 import com.github.pagehelper.PageInfo;
-import com.my.blog.website.modal.Vo.AttachVo;
+import com.my.blog.website.model.Vo.AttachVo;
 
 /**
  * @author liuyalong

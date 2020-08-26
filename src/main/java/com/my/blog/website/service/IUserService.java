@@ -1,7 +1,10 @@
 package com.my.blog.website.service;
 
-import com.my.blog.website.modal.Vo.UserVo;
+import com.my.blog.website.model.Vo.UserVo;
 
+/**
+ * @author liuyalong
+ */
 public interface IUserService {
 
     /**
@@ -15,23 +18,16 @@ public interface IUserService {
 
     /**
      * 通过uid查找对象
-     * @param uid
-     * @return
      */
     UserVo queryUserById(Integer uid);
 
     /**
      * 用戶登录
-     * @param username
-     * @param password
-     * @return
      */
     UserVo login(String username, String password);
 
     /**
      * 根据主键更新user对象
-     * @param userVo
-     * @return
      */
     void updateByUid(UserVo userVo);
 }

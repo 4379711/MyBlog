@@ -125,6 +125,7 @@
                 data: params,
                 success: function (result) {
                     if(result && result.success){
+                        document.getElementById("pwd-form").reset();
                         tale.alertOk('密码修改成功');
                     } else {
                         tale.alertError(result.msg || '密码修改失败');

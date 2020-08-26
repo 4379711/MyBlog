@@ -6,23 +6,21 @@ import com.my.blog.website.dto.ErrorCode;
 import com.my.blog.website.dto.MetaDto;
 import com.my.blog.website.dto.Types;
 import com.my.blog.website.exception.TipException;
-import com.my.blog.website.modal.Bo.ArchiveBo;
-import com.my.blog.website.modal.Bo.RestResponseBo;
-import com.my.blog.website.modal.Vo.CommentVo;
-import com.my.blog.website.modal.Vo.MetaVo;
+import com.my.blog.website.model.Bo.ArchiveBo;
+import com.my.blog.website.model.Bo.RestResponseBo;
+import com.my.blog.website.model.Vo.CommentVo;
+import com.my.blog.website.model.Vo.MetaVo;
 import com.my.blog.website.service.IMetaService;
 import com.my.blog.website.service.ISiteService;
 import com.my.blog.website.utils.PatternKit;
 import com.my.blog.website.utils.TaleUtils;
 import com.vdurmont.emoji.EmojiParser;
-import com.my.blog.website.modal.Bo.CommentBo;
-import com.my.blog.website.modal.Vo.ContentVo;
+import com.my.blog.website.model.Bo.CommentBo;
+import com.my.blog.website.model.Vo.ContentVo;
 import com.my.blog.website.service.ICommentService;
 import com.my.blog.website.service.IContentService;
 import com.my.blog.website.utils.IPKit;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -31,17 +29,16 @@ import javax.annotation.Resource;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import java.net.URLEncoder;
 import java.util.List;
 
 /**
  * 首页
+ *
  * @author liuyalong
  */
 @Controller
 public class IndexController extends BaseController {
-    private static final Logger LOGGER = LoggerFactory.getLogger(IndexController.class);
 
     @Resource
     private IContentService contentService;
@@ -123,9 +120,6 @@ public class IndexController extends BaseController {
 
     /**
      * 抽取公共方法
-     *
-     * @param request
-     * @param contents
      */
     private void completeArticle(HttpServletRequest request, ContentVo contents) {
         if (contents.getAllowComment()) {
@@ -139,16 +133,6 @@ public class IndexController extends BaseController {
         }
     }
 
-    /**
-     * 注销
-     *
-     * @param session
-     * @param response
-     */
-    @RequestMapping("logout")
-    public void logout(HttpSession session, HttpServletResponse response) {
-        TaleUtils.logout(session, response);
-    }
 
     /**
      * 评论操作
@@ -179,7 +163,7 @@ public class IndexController extends BaseController {
             return RestResponseBo.fail("姓名过长");
         }
 
-        if (StringUtils.isNotBlank(mail) && !TaleUtils.isEmail(mail)) {
+        if (StringUtils.isNotBlank(mail) && PatternKit.isEmail(mail)) {
             return RestResponseBo.fail("请输入正确的邮箱格式");
         }
 
@@ -218,16 +202,11 @@ public class IndexController extends BaseController {
             if (StringUtils.isNotBlank(url)) {
                 cookie("tale_remember_url", URLEncoder.encode(url, "UTF-8"), 7 * 24 * 60 * 60, response);
             }
-            // 设置对每个文章1分钟可以评论一次
-            cache.hset(Types.COMMENTS_FREQUENCY.getType(), val, 1, 60);
+            // 设置对每个文章1秒可以评论一次
+            cache.hset(Types.COMMENTS_FREQUENCY.getType(), val, 1, 10);
             return RestResponseBo.ok();
         } catch (Exception e) {
             String msg = "评论发布失败";
-            if (e instanceof TipException) {
-                msg = e.getMessage();
-            } else {
-                LOGGER.error(msg, e);
-            }
             return RestResponseBo.fail(msg);
         }
     }
